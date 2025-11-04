@@ -1,3 +1,4 @@
+
 # Cape Ann Nor'easters — Football Squares
 
 Static site (no build tools). Includes:
