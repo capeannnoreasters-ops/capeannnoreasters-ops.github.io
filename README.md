@@ -34,4 +34,3 @@ In the app, set a password in **Setup → Optional Admin Lock**. This prevents e
 ## Logo replacements
 
 Replace `assets/logo-full.png` and `assets/logo-wordmark.png` with updated images using the same filenames to rebrand.
-
