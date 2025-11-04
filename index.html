@@ -1,70 +1,82 @@
 <!doctype html>
 <html>
   <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cape Ann Nor'easters — Football Squares</title>
-    <link rel="icon" href="./assets/logo-wordmark.png"/>
+    <link rel="icon" href="./assets/logo-wordmark.png" />
     <style>
-      :root{
-        --brand:#1e3a8a;
-        --brand-2:#60a5fa;
-        --bg:#f8fafc;
-        --card:#ffffff;
-        --ink:#0f172a;
-        --muted:#475569;
-        --border:#e2e8f0;
-        --win:#dcfce7;
+      :root {
+        --brand: #1e3a8a;
+        --brand-2: #60a5fa;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --border: #e2e8f0;
+        --win: #dcfce7;
       }
-      *{box-sizing:border-box}
-      html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial,Apple Color Emoji,Segoe UI Emoji;}
-      .container{max-width:1200px;margin:0 auto;padding:16px;}
-      .header{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
-      .header img{height:56px;object-fit:contain}
-      h1{font-size:22px;margin:0}
-      .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;}
-      .grid{display:grid;grid-template-columns:1fr 2fr;gap:16px}
-      .label{display:block;font-weight:600;margin-bottom:6px}
-      .row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-      input,select,button,textarea{font:inherit;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--ink)}
-      button{cursor:pointer}
-      button.primary{background:var(--brand);color:white;border-color:var(--brand)}
-      button.ghost{background:transparent}
-      .small{font-size:12px;color:var(--muted)}
-      .section-title{font-weight:700;margin:10px 0}
-      .board-wrap{overflow:auto}
-      .board{display:grid;grid-template-columns:120px repeat(10,1fr)}
-      .board .cell{border:1px solid var(--border);min-width:90px;min-height:60px;padding:6px;font-size:12px;position:relative}
-      .board .header{position:sticky;z-index:5;background:#f1f5f9}
-      .board .sticky-left{left:0}
-      .board .sticky-top{top:0}
-      .badge{font-size:10px;padding:2px 6px;border-radius:999px;background:#fde68a;position:relative;top:-1px}
-      .badge.paid{background:#bbf7d0}
-      .win{background:var(--win);outline:2px solid #22c55e}
-      .controls{display:flex;gap:8px;flex-wrap:wrap}
-      .footer{margin-top:8px}
-      .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
-      .modal{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;max-width:520px;width:92%}
-      .kv{display:flex;justify-content:space-between;gap:8px;margin:6px 0}
-      .table{border:1px solid var(--border);border-radius:10px;overflow:hidden}
-      .table .thead,.table .row{display:grid;grid-template-columns:40px 40px 1fr 1fr 70px 1fr;gap:0}
-      .table .thead > div{background:#f8fafc;font-size:12px;font-weight:600;padding:8px;border-right:1px solid var(--border)}
-      .table .row > div{padding:8px;border-top:1px solid var(--border);border-right:1px solid var(--border);font-size:12px}
-      .note{font-size:12px;color:var(--muted)}
-      .logo-stack{display:flex;align-items:center;gap:12px}
-      .pill{padding:4px 8px;border:1px solid var(--border);border-radius:999px;font-size:12px}
-      .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-      hr.sep{border:0;border-top:1px dashed var(--border);margin:10px 0}
-      .alert{padding:8px 10px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a}
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+          Noto Sans, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+      .header img {
+        height: 56px;
+        object-fit: contain;
+      }
+      h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 16px;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <img src="./assets/logo-full.png" alt="Cape Ann Nor'easters logo" onError="this.style.display='none'"/>
+        <img
+          src="./assets/logo-full.png"
+          alt="Cape Ann Nor'easters logo"
+          id="main-logo"
+        />
         <div>
           <h1>Cape Ann Nor'easters — Football Squares</h1>
-          <div class="small">Venmo-enabled • Export/Import • Read-only mode • Multi-board</div>
+          <div class="small">
+            Venmo-enabled • Export/Import • Read-only mode • Multi-board
+          </div>
         </div>
       </div>
       <div class="grid">
@@ -72,7 +84,22 @@
         <div class="card" id="board"></div>
       </div>
     </div>
+
     <div id="modal-root"></div>
+
+    <script>
+      // ✅ Fix the inline error handler using vanilla JS
+      document.addEventListener("DOMContentLoaded", () => {
+        const logo = document.getElementById("main-logo");
+        if (logo) {
+          logo.onerror = () => {
+            logo.style.display = "none";
+          };
+        }
+      });
+    </script>
+
     <script type="module" src="./assets/app.js"></script>
   </body>
 </html>
+
