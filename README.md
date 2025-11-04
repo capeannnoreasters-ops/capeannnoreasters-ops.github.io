@@ -32,5 +32,6 @@ Once live, append `?view=1` to share a non-editable viewer page.
 In the app, set a password in **Setup → Optional Admin Lock**. This prevents edits on shared devices (stored as a hash in localStorage; not meant as high security).
 
 ## Logo replacements
+
 Replace `assets/logo-full.png` and `assets/logo-wordmark.png` with updated images using the same filenames to rebrand.
 
