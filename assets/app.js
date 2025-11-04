@@ -219,7 +219,11 @@ function Setup({ root, board, setBoard, viewOnly }){
         </div>
         <div>
           <label class="label">Read-only Link</label>
-          <input readonly value=${location.origin + location.pathname + '?view=1'} onclick="this.select()"/>
+          <input readonly
+  value=${location.origin + location.pathname + '?view=1'}
+  onFocus=${e => e.target.select()}
+  onClick=${e => e.target.select()}/>
+
         </div>
       </div>
 
