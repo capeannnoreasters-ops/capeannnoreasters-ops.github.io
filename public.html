@@ -6,7 +6,7 @@
   <title>Cape Ann Nor’easters — Football Squares</title>
   <link rel="icon" href="./assets/logo-wordmark.png" type="image/png"/>
   <style>
-    :root{--brand:#1e3a8a;--brand-2:#60a5fa;--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#475569;--border:#e2e8f0}
+    :root{--brand:#1e3a8a;--brand-2:#60a5fa;--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#475569;--border:#e2e8f0;--win:#dcfce7}
     *{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto}
     .container{max-width:1100px;margin:0 auto;padding:16px}
     .hero{background:linear-gradient(135deg, rgba(30,58,138,.95), rgba(96,165,250,.85));color:#fff;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:78px}
@@ -26,19 +26,21 @@
     .head{background:#f1f5f9;font-weight:700;position:sticky}
     .sticky-top{top:0}.sticky-left{left:0}
     .pending{background:#fef3c7}.paid{background:#dcfce7}
+    .win{outline:2px solid #22c55e; position:relative}
+    .win::after{content:"WIN"; position:absolute; top:4px; right:4px; font-size:10px; background:#22c55e; color:#fff; padding:2px 4px; border-radius:6px}
     .rules h2{margin:0 0 6px 0;color:var(--brand);font-size:16px}
     .rules ul{margin:0 0 0 1.2em}
+    .winners{margin-top:10px;border-top:1px dashed var(--border);padding-top:10px}
     .footer{margin:16px 0;text-align:center;color:var(--muted);font-size:12px}
     /* Admin drawer */
     .drawer{position:fixed;right:16px;bottom:16px}
-    .drawer .panel{display:none;position:fixed;right:16px;bottom:64px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15);width:330px;max-height:70vh;overflow:auto;padding:12px}
+    .drawer .panel{display:none;position:fixed;right:16px;bottom:64px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.15);width:340px;max-height:78vh;overflow:auto;padding:12px}
     .drawer.open .panel{display:block}
     .btn{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:8px 10px;cursor:pointer}
     .row{display:flex;gap:8px;flex-wrap:wrap}
     input,button{font:inherit}
     label{font-size:12px;color:var(--muted)}
     table{width:100%;border-collapse:collapse;font-size:12px}
-    th,td{border:1px solid var(--border);padding:6px;text-align:left}
   </style>
 </head>
 <body>
@@ -73,72 +75,66 @@
         <h2>How It Works</h2>
         <ul id="rules-text">
           <li>Each square costs the listed amount. You can buy as many as you like.</li>
-          <li>The numbers for each team (0–9) will be randomized before the game starts.</li>
-          <li>Winners are based on the last digit of each team's score at the end of each quarter.</li>
-          <li>Payouts: 1Q – 5%, 2Q – 15%, 3Q – 5%, 4Q – 25% (Team retains 50%).</li>
-          <li>Payments are handled securely through Venmo (<b>@NoreastersFlagFB</b>).</li>
+          <li>Numbers for each team (0–9) will be randomized before the game starts.</li>
+          <li>Winners are based on the last digit of each team's score at the end of each period.</li>
+          <li id="payout-line">Payouts: 1Q – 5%, HT – 15%, Q4 – 5%, Final – 25% (Team keeps 50%).</li>
+          <li id="lock-line" style="display:none"></li>
+          <li>Payments are through Venmo (<b>@NoreastersFlagFB</b>).</li>
         </ul>
+
+        <div class="winners" id="winners" style="display:none">
+          <b>Winners</b>
+          <div id="winners-list" class="meta" style="margin-top:6px"></div>
+        </div>
       </div>
     </div>
 
     <div class="footer">&copy; 2025 Cape Ann Nor’easters — Youth Flag Football</div>
   </div>
 
-  <!-- Admin drawer -->
+  <!-- Admin drawer (scores input here) -->
   <div class="drawer" id="drawer">
     <button class="btn" id="adminFab" title="Admin">⚙️</button>
     <div class="panel">
-      <div style="font-weight:700;margin-bottom:6px">Admin</div>
+      <div style="font-weight:700;margin-bottom:6px">Admin (Scores)</div>
       <div class="row">
         <div style="flex:1">
           <label>Board Slug</label>
-          <input id="admSlug" placeholder="e.g., week3-storm" style="width:100%"/>
+          <input id="admSlug" placeholder="slug" style="width:100%"/>
         </div>
         <div style="flex:1">
           <label>Password</label>
-          <input id="admToken" type="password" placeholder="admin password" style="width:100%"/>
-        </div>
-        <div style="align-self:flex-end">
-          <button class="btn" id="admLoad">Load</button>
+          <input id="admToken" type="password" placeholder="password" style="width:100%"/>
         </div>
       </div>
-
-      <hr/>
-
-      <div class="row">
-        <button class="btn" id="admOpen">Open Sales</button>
-        <button class="btn" id="admClose">Close Sales</button>
-        <button class="btn" id="admRandomize" title="Needs 100/100 taken">Randomize Once</button>
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1">
+          <label>Q1 (Top, Side)</label>
+          <div class="row"><input id="s_q1_top" type="number" style="flex:1"/><input id="s_q1_side" type="number" style="flex:1"/></div>
+        </div>
       </div>
-
-      <h4 style="margin:10px 0 6px 0">Create Board</h4>
-      <div class="row">
-        <input id="cb_slug" placeholder="slug (unique)" style="flex:1"/>
-        <input id="cb_title" placeholder="Title" style="flex:1"/>
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1">
+          <label>HT (Top, Side)</label>
+          <div class="row"><input id="s_ht_top" type="number" style="flex:1"/><input id="s_ht_side" type="number" style="flex:1"/></div>
+        </div>
       </div>
-      <div class="row">
-        <input id="cb_top" placeholder="Top team" style="flex:1"/>
-        <input id="cb_side" placeholder="Side team" style="flex:1"/>
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1">
+          <label>Q4 (Top, Side)</label>
+          <div class="row"><input id="s_q4_top" type="number" style="flex:1"/><input id="s_q4_side" type="number" style="flex:1"/></div>
+        </div>
       </div>
-      <div class="row">
-        <input id="cb_cost" type="number" placeholder="$ per square" style="flex:1"/>
-        <input id="cb_date" type="date" style="flex:1"/>
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1">
+          <label>Final (Top, Side)</label>
+          <div class="row"><input id="s_final_top" type="number" style="flex:1"/><input id="s_final_side" type="number" style="flex:1"/></div>
+        </div>
       </div>
-      <div class="row">
-        <input id="cb_venmo" placeholder="@NoreastersFlagFB" style="flex:1"/>
-        <input id="cb_pwd" type="password" placeholder="Admin password" style="flex:1"/>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="saveScores">Save Scores</button>
       </div>
-      <div class="row">
-        <button class="btn" id="cb_create">Create/Update Board</button>
-      </div>
-
-      <h4 style="margin:10px 0 6px 0">Reservations</h4>
-      <div style="max-height:260px;overflow:auto">
-        <table style="width:100%">
-          <thead><tr><th>Idx</th><th>Name</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="admRes"></tbody>
-        </table>
-      </div>
+      <div class="small" style="margin-top:6px">After saving, winners will appear on this page.</div>
     </div>
   </div>
 
