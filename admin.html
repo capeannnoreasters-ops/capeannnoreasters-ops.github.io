@@ -20,7 +20,7 @@
     .label{font-weight:700;margin-bottom:4px;display:block}
     .row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:end}
     .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:end}
-    input,button{font:inherit;padding:8px 10px;border:1px solid var(--border);border-radius:10px}
+    input,select,button{font:inherit;padding:8px 10px;border:1px solid var(--border);border-radius:10px}
     button{background:var(--brand);color:#fff;border-color:var(--brand);cursor:pointer}
     button.ghost{background:#fff;color:var(--ink)}
     .pill{padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12px;margin-right:6px}
@@ -37,7 +37,7 @@
       <img src="./assets/logo-full.png" alt="Logo" onerror="this.style.display='none'"/>
       <div>
         <h1>Nor’easters — Admin</h1>
-        <div class="small">Manage boards, sales, payouts, randomization & exports</div>
+        <div class="small">Manage boards, sales, payouts, randomization & winners</div>
       </div>
       <div style="margin-left:auto">
         <a class="small" href="./">↩ Back to Boards</a>
@@ -64,7 +64,7 @@
     </div>
 
     <div class="grid">
-      <!-- Column 1: Controls -->
+      <!-- Column 1: Controls + Create Board -->
       <div class="col">
         <div class="card">
           <div class="section-title">Board Controls</div>
@@ -123,60 +123,101 @@
           </div>
           <div style="margin-top:10px">
             <button id="cb_create">Create/Update Board</button>
-            <div class="small" style="margin-top:6px">
-              Creates the board (or updates if slug exists) and stores a hashed admin password.
-            </div>
+            <div class="small" style="margin-top:6px">Creates the board (or updates if slug exists) and stores a hashed admin password.</div>
           </div>
         </div>
       </div>
 
-      <!-- Column 2: Payouts & Lock -->
-      <div class="col">
-     <div class="card">
-  <div class="section-title">Official Scores</div>
-  <div class="row"><div>
-    <label class="label">Q1 (Top, Side)</label>
-    <div class="row">
-      <input id="a_q1_top" type="number" placeholder="Top"/><input id="a_q1_side" type="number" placeholder="Side"/>
-    </div>
-  </div></div>
-  <div class="row" style="margin-top:8px"><div>
-    <label class="label">HT (Top, Side)</label>
-    <div class="row">
-      <input id="a_ht_top" type="number" placeholder="Top"/><input id="a_ht_side" type="number" placeholder="Side"/>
-    </div>
-  </div></div>
-  <div class="row" style="margin-top:8px"><div>
-    <label class="label">Q4 (Top, Side)</label>
-    <div class="row">
-      <input id="a_q4_top" type="number" placeholder="Top"/><input id="a_q4_side" type="number" placeholder="Side"/>
-    </div>
-  </div></div>
-  <div class="row" style="margin-top:8px"><div>
-    <label class="label">Final (Top, Side)</label>
-    <div class="row">
-      <input id="a_final_top" type="number" placeholder="Top"/><input id="a_final_side" type="number" placeholder="Side"/>
-    </div>
-  </div></div>
-  <div style="margin-top:10px">
-    <button id="saveScoresAdmin">Save Scores</button>
-    <div class="small" style="margin-top:6px">Saves to the board and immediately updates the public page/winners.</div>
-  </div>
-</div>
-    <label class="label" for="p_mode">Payout Mode</label>
-    <select id="p_mode">
-      <option value="percent">Percent of Pot</option>
-      <option value="fixed">Fixed $ Amounts</option>
-    </select>
-  </div>
-</div>
-
-      <!-- Column 3: Reservations -->
+      <!-- Column 2: Payouts, Mode & Lock -->
       <div class="col">
         <div class="card">
+          <div class="section-title">Payouts & Lock Time</div>
+          <div class="row3">
+            <div>
+              <label class="label" for="p_q1">Q1</label>
+              <input id="p_q1" type="number" min="0" step="1" placeholder="5"/>
+            </div>
+            <div>
+              <label class="label" for="p_ht">HT</label>
+              <input id="p_ht" type="number" min="0" step="1" placeholder="15"/>
+            </div>
+            <div>
+              <label class="label" for="p_q4">Q4</label>
+              <input id="p_q4" type="number" min="0" step="1" placeholder="5"/>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label class="label" for="p_final">Final</label>
+              <input id="p_final" type="number" min="0" step="1" placeholder="25"/>
+            </div>
+            <div>
+              <label class="label" for="lock_at">Lock / Randomize At</label>
+              <input id="lock_at" type="datetime-local"/>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label class="label" for="p_mode">Payout Mode</label>
+              <select id="p_mode">
+                <option value="percent">Percent of Pot</option>
+                <option value="fixed">Fixed $ Amounts</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <button id="saveSettingsBtn">Save Settings</button>
+            <div class="small" style="margin-top:6px">Payouts appear on the public rules. Numbers stay hidden until randomized.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 3: Official Scores + Reservations -->
+      <div class="col">
+        <div class="card">
+          <div class="section-title">Official Scores</div>
+          <div class="row">
+            <div>
+              <label class="label">Q1 (Top, Side)</label>
+              <div class="row">
+                <input id="a_q1_top" type="number" placeholder="Top"/><input id="a_q1_side" type="number" placeholder="Side"/>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label class="label">HT (Top, Side)</label>
+              <div class="row">
+                <input id="a_ht_top" type="number" placeholder="Top"/><input id="a_ht_side" type="number" placeholder="Side"/>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label class="label">Q4 (Top, Side)</label>
+              <div class="row">
+                <input id="a_q4_top" type="number" placeholder="Top"/><input id="a_q4_side" type="number" placeholder="Side"/>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label class="label">Final (Top, Side)</label>
+              <div class="row">
+                <input id="a_final_top" type="number" placeholder="Top"/><input id="a_final_side" type="number" placeholder="Side"/>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <button id="saveScoresAdmin">Save Scores</button>
+            <div class="small" style="margin-top:6px">Saves to the board and immediately updates winners on public page.</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
           <div class="section-title">Reservations</div>
           <div class="small" style="margin-bottom:6px">Click “Mark Paid” to confirm payment.</div>
-          <div style="max-height:680px;overflow:auto">
+          <div style="max-height:420px;overflow:auto">
             <table>
               <thead>
                 <tr>
