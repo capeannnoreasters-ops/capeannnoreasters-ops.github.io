@@ -1,155 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>Cape Ann Nor’easters — Football Squares</title>
+    <link rel="icon" href="./assets/logo-wordmark.png" type="image/png"/>
 
-    <!-- Favicon -->
-    <link rel="icon" href="./assets/logo-wordmark.png" type="image/png" />
-
-    <!-- Minimal reset and layout -->
     <style>
-      :root {
-        --brand: #1e3a8a;
-        --brand-light: #60a5fa;
-        --bg: #f8fafc;
-        --card: #ffffff;
-        --border: #e2e8f0;
-        --ink: #0f172a;
-        --muted: #475569;
-        --accent: #22c55e;
+      :root{
+        --brand:#1e3a8a;        /* Nor’easters navy */
+        --brand-2:#60a5fa;      /* light blue accent */
+        --bg:#f8fafc;
+        --card:#ffffff;
+        --ink:#0f172a;
+        --muted:#475569;
+        --border:#e2e8f0;
+        --win:#dcfce7;
       }
-      * { box-sizing: border-box; }
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: var(--bg);
-        color: var(--ink);
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      *{box-sizing:border-box}
+      html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif}
+
+      .container{max-width:1100px;margin:0 auto;padding:16px}
+      .hero{
+        background:linear-gradient(135deg, rgba(30,58,138,.95), rgba(96,165,250,.85)), url("./assets/logo-full.png") center/120px no-repeat;
+        color:#fff;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:78px
       }
-      .container {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-      header img { height: 60px; }
-      h1 {
-        margin: 0;
-        font-size: 1.6rem;
-        color: var(--brand);
-      }
-      h2 {
-        margin: 1.4em 0 0.5em;
-        color: var(--brand);
-      }
-      .card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        margin-bottom: 20px;
-      }
-      .board {
-        display: grid;
-        grid-template-columns: 80px repeat(10, 1fr);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        overflow: hidden;
-      }
-      .cell {
-        border: 1px solid var(--border);
-        min-width: 60px;
-        min-height: 50px;
-        font-size: 13px;
-        padding: 4px;
-        text-align: center;
-        cursor: pointer;
-      }
-      .cell.header {
-        background: #f1f5f9;
-        font-weight: 600;
-      }
-      .cell.pending {
-        background: #fef3c7;
-      }
-      .cell.paid {
-        background: #dcfce7;
-      }
-      .rules ul {
-        margin: 0.5em 0 0 1.2em;
-      }
-      button {
-        background: var(--brand);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 14px;
-        cursor: pointer;
-      }
-      button:hover {
-        background: var(--brand-light);
-      }
-      footer {
-        text-align: center;
-        font-size: 0.8rem;
-        color: var(--muted);
-        margin-top: 2em;
-      }
-      @media (max-width: 700px) {
-        .board { overflow-x: auto; display: block; }
+      .hero img{height:56px;background:#fff;border-radius:12px;padding:6px}
+      .hero h1{margin:0;font-size:20px}
+      .hero-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+      .select{appearance:none;padding:8px 36px 8px 10px;border:1px solid rgba(255,255,255,.35);border-radius:10px;background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+      .pill{padding:4px 8px;border:1px solid rgba(255,255,255,.35);border-radius:999px;font-size:12px;background:rgba(255,255,255,.12);color:#fff}
+
+      .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;margin-top:12px}
+      .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+
+      .meta{font-size:13px;color:var(--muted)}
+      .stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+      .stat{padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12px}
+
+      .board-wrap{overflow:auto}
+      .board{display:grid;grid-template-columns:120px repeat(10,1fr)}
+      .cell{border:1px solid var(--border);min-width:86px;min-height:54px;padding:6px;font-size:12px;background:#fff;text-align:center}
+      .head{background:#f1f5f9;font-weight:700;position:sticky}
+      .sticky-top{top:0}
+      .sticky-left{left:0}
+      .pending{background:#fef3c7}
+      .paid{background:#dcfce7}
+
+      .rules h2{margin:0 0 6px 0;color:var(--brand);font-size:16px}
+      .rules ul{margin:0 0 0 1.2em}
+      .footer{margin:16px 0;text-align:center;color:var(--muted);font-size:12px}
+
+      @media (max-width:800px){
+        .grid{grid-template-columns:1fr}
+        .hero-right{width:100%;justify-content:flex-end}
       }
     </style>
   </head>
-
   <body>
     <div class="container">
-      <header>
-        <img src="./assets/logo-full.png" alt="Cape Ann Nor’easters Logo"
-             onerror="this.style.display='none'" />
+
+      <!-- Header / branding / multi-board selector -->
+      <div class="hero">
+        <img src="./assets/logo-full.png" alt="Logo" onerror="this.style.display='none'"/>
         <div>
           <h1>Cape Ann Nor’easters — Football Squares</h1>
-          <div style="font-size:0.9rem; color:var(--muted);">
-            Support the team and win prizes every quarter!
+          <div style="opacity:.9;font-size:12px">Support the team and win prizes each quarter</div>
+        </div>
+        <div class="hero-right">
+          <span class="pill">Public Board</span>
+          <select id="boardSelect" class="select" title="Switch board">
+            <option>Loading boards…</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div id="board-info">
+            <div id="board-title" style="font-weight:700;font-size:16px">Loading…</div>
+            <div id="board-meta" class="meta"></div>
+            <div id="board-stats" class="stats"></div>
+          </div>
+
+          <div class="board-wrap" style="margin-top:10px">
+            <div id="board-grid" class="board"></div>
           </div>
         </div>
-      </header>
 
-      <!-- Board info and grid -->
-      <div id="board-container" class="card">
-        <div id="board-info">
-          <h2 id="board-title">Loading...</h2>
-          <div id="board-meta"></div>
+        <div class="card rules">
+          <h2>How It Works</h2>
+          <ul id="rules-text">
+            <li>Each square costs the listed amount. You can buy as many as you like.</li>
+            <li>The numbers for each team (0–9) will be randomized before the game starts.</li>
+            <li>Winners are based on the last digit of each team's score at the end of each quarter.</li>
+            <li>Payouts: 1Q – 5%, 2Q – 15%, 3Q – 5%, 4Q – 25% (Team retains 50%).</li>
+            <li>Payments are handled securely through Venmo (<b>@NoreastersFlagFB</b>).</li>
+          </ul>
         </div>
-
-        <div id="board-grid" class="board"></div>
       </div>
 
-      <!-- Rules and instructions -->
-      <div class="card rules">
-        <h2>How It Works</h2>
-        <ul id="rules-text">
-          <li>Each square costs the listed amount. You can buy as many as you like.</li>
-          <li>The numbers for each team (0–9) will be randomized before the game starts.</li>
-          <li>Winners are based on the last digit of each team's score at the end of each quarter.</li>
-          <li>Payouts: 1Q – 5%, 2Q – 15%, 3Q – 5%, 4Q – 25% (Team retains 50%).</li>
-          <li>Payments are handled securely through Venmo (<b>@NoreastersFlagFB</b>).</li>
-        </ul>
-      </div>
-
-      <footer>
-        &copy; 2025 Cape Ann Nor’easters — Youth Flag Football
-      </footer>
+      <div class="footer">&copy; 2025 Cape Ann Nor’easters — Youth Flag Football</div>
     </div>
 
-    <!-- Public app logic -->
     <script type="module" src="./assets/public.js"></script>
   </body>
 </html>
