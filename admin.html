@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Nor’easters — Admin</title>
+  <link rel="icon" href="./assets/logo-wordmark.png"/>
+  <style>
+    :root { --brand:#1e3a8a; --bg:#f8fafc; --card:#fff; --border:#e2e8f0; --ink:#0f172a; --muted:#475569; }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    header img{height:52px}
+    h1{margin:0;font-size:20px}
+    .row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
+    .label{font-weight:700;margin-bottom:4px;display:block}
+    input,select,button{font:inherit;padding:8px 10px;border:1px solid var(--border);border-radius:10px}
+    button{background:var(--brand);color:#fff;border-color:var(--brand);cursor:pointer}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border:1px solid var(--border);padding:6px;text-align:left}
+    .small{color:var(--muted);font-size:12px}
+    .pill{padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:#fff;font-size:12px;margin-right:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="./assets/logo-full.png" alt="Logo" onerror="this.style.display='none'"/>
+      <div>
+        <h1>Nor’easters — Admin</h1>
+        <div class="small">Manage boards, payouts, and randomization</div>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="row">
+        <div>
+          <label class="label">Board (slug)</label>
+          <input id="slug" placeholder="e.g., week1-scrimmage"/>
+        </div>
+        <div>
+          <label class="label">Admin Password</label>
+          <input id="adminToken" type="password" placeholder="enter admin password"/>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <button id="loadBtn">Load</button>
+          <button id="setPwdBtn" title="Set/Change admin password">Set Admin Password</button>
+        </div>
+      </div>
+      <div id="meta" class="small" style="margin-top:8px"></div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <div class="label">Board Controls</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="openBtn">Open Sales</button>
+          <button id="closeBtn">Close Sales</button>
+          <button id="randomizeBtn" title="Requires 100/100 taken">Randomize Numbers (once)</button>
+          <button id="exportBtn">Export CSV</button>
+        </div>
+        <div id="stats" style="margin-top:8px"></div>
+      </div>
+
+      <div class="card" style="grid-column: span 2">
+        <div class="label">Reservations</div>
+        <div class="small" style="margin-bottom:6px">Click “Mark Paid” to confirm payment.</div>
+        <div style="max-height:420px;overflow:auto">
+          <table id="resTable">
+            <thead><tr>
+              <th>When</th><th>Idx</th><th>Name</th><th>Email</th><th>Status</th><th>Paid At</th><th>Action</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./assets/admin.js"></script>
+</body>
+</html>
