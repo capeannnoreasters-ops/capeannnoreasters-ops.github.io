@@ -4,7 +4,7 @@
 
 // --- Supabase Config ---
 const SUPABASE_URL = "https://jpzxvnqjsixvnwzjfxuh.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwenh2bnFqc2l4dm53empmeHVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODE5NTEsImV4cCI6MjA3Nzg1Nzk1MX0.hyDskGwIwNv9MNBHkuX_DrIpnUHBouK5hgPZKXGOEEk";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_KEY_HERE";
 // -----------------------
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
@@ -92,7 +92,7 @@ async function loadBoard(slug) {
     `$${board.cost_per_square}/sq • ${board.is_open ? "OPEN" : "CLOSED"}` +
     (board.randomized_at ? " • randomized " + fmtDate(board.randomized_at) : "");
 
-  // Fill payouts + lock
+  // Fill payouts + lock + mode
   els.payouts.q1.value    = board.payouts?.q1 ?? (board.payout_mode === "fixed" ? 0 : 5);
   els.payouts.ht.value    = board.payouts?.ht ?? (board.payout_mode === "fixed" ? 0 : 15);
   els.payouts.q4.value    = board.payouts?.q4 ?? (board.payout_mode === "fixed" ? 0 : 5);
@@ -111,8 +111,8 @@ async function loadBoard(slug) {
     els.scores.final_top.value  = board.scores.final?.top ?? "";
     els.scores.final_side.value = board.scores.final?.side?? "";
   } else {
-    // clear
-    ["q1_top","q1_side","ht_top","ht_side","q4_top","q4_side","final_top","final_side"].forEach(k => els.scores[k].value = "");
+    ["q1_top","q1_side","ht_top","ht_side","q4_top","q4_side","final_top","final_side"]
+      .forEach(k => els.scores[k].value = "");
   }
 
   await refreshStats();
@@ -122,10 +122,7 @@ async function loadBoard(slug) {
 async function refreshStats() {
   if (!board) return;
   const { data, error } = await sb.from("board_stats").select("*").eq("slug", board.slug).maybeSingle();
-  if (error || !data) {
-    els.stats.textContent = "Stats unavailable";
-    return;
-  }
+  if (error || !data) { els.stats.textContent = "Stats unavailable"; return; }
   const sold = data.sold_count || 0;
   const paid = data.paid_count || 0;
   const pending = data.pending_count || 0;
@@ -146,10 +143,7 @@ async function refreshReservations() {
     .select("id,square_idx,buyer_name,email,status,created_at,paid_at")
     .eq("board_id", board.id)
     .order("created_at", { ascending: false });
-  if (error) {
-    alert("Failed to load reservations");
-    return;
-  }
+  if (error) { alert("Failed to load reservations"); return; }
 
   els.resTableBody.innerHTML = "";
   for (const r of data || []) {
@@ -166,24 +160,17 @@ async function refreshReservations() {
     els.resTableBody.appendChild(tr);
   }
 
-  // Hook "Mark Paid"
   document.querySelectorAll(".markPaid").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const id = btn.getAttribute("data-id");
       const token = els.token.value.trim();
-      if (!token) {
-        alert("Enter admin password first.");
-        return;
-      }
+      if (!token) { alert("Enter admin password first."); return; }
       const { data: resp, error } = await sb.rpc("admin_mark_paid", {
         p_board_slug: board.slug,
         p_token: token,
         p_reservation_id: id,
       });
-      if (error || !resp?.ok) {
-        alert("Not authorized or failed.");
-        return;
-      }
+      if (error || !resp?.ok) { alert("Not authorized or failed."); return; }
       await refreshStats();
       await refreshReservations();
     });
@@ -193,29 +180,20 @@ async function refreshReservations() {
 /* ---------- Core admin actions ---------- */
 // Load
 els.loadBtn.addEventListener("click", async () => {
-  try {
-    await loadBoard(els.slug.value.trim());
-  } catch (e) {
-    alert(e.message);
-  }
+  try { await loadBoard(els.slug.value.trim()); }
+  catch (e) { alert(e.message); }
 });
 
 // Set/Change password
 els.setPwdBtn.addEventListener("click", async () => {
   const slug = els.slug.value.trim();
   const token = els.token.value.trim();
-  if (!slug || !token) {
-    alert("Enter slug and a new admin password.");
-    return;
-  }
+  if (!slug || !token) { alert("Enter slug and a new admin password."); return; }
   const { data, error } = await sb.rpc("admin_set_password", {
     p_board_slug: slug,
     p_new_token: token,
   });
-  if (error || !data?.ok) {
-    alert("Failed to set password.");
-    return;
-  }
+  if (error || !data?.ok) { alert("Failed to set password."); return; }
   alert("Admin password set.");
 });
 
@@ -276,14 +254,7 @@ els.exportBtn.addEventListener("click", async () => {
 
   const rows = [["Square", "Name", "Email", "Status", "Paid At", "Reserved At"]];
   (data || []).forEach((r) => {
-    rows.push([
-      r.square_idx + 1,
-      r.buyer_name || "",
-      r.email || "",
-      r.status,
-      r.paid_at || "",
-      r.created_at || "",
-    ]);
+    rows.push([r.square_idx + 1, r.buyer_name || "", r.email || "", r.status, r.paid_at || "", r.created_at || ""]);
   });
   const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
@@ -308,10 +279,7 @@ els.cb.createBtn.addEventListener("click", async () => {
     venmo: els.cb.venmo.value.trim() || "@NoreastersFlagFB",
     pwd: els.cb.pwd.value.trim(),
   };
-  if (!p.slug || !p.title || !p.pwd) {
-    alert("Slug, Title and Admin password are required.");
-    return;
-  }
+  if (!p.slug || !p.title || !p.pwd) { alert("Slug, Title and Admin password are required."); return; }
 
   const payload = {
     p_slug: p.slug,
@@ -321,18 +289,14 @@ els.cb.createBtn.addEventListener("click", async () => {
     p_cost_per_square: p.cost,
     p_game_date: p.date,
     p_venmo_handle: p.venmo,
-    p_payout_mode: "percent",                  // default; can change in settings below
+    p_payout_mode: "percent",                     // default; can change below
     p_payouts: { q1: 5, ht: 15, q4: 5, final: 25 },
     p_is_open: true,
     p_admin_token: p.pwd,
   };
 
   const { data, error } = await sb.rpc("admin_create_board", payload);
-  if (error || !data?.ok) {
-    console.error(error);
-    alert("Create failed.");
-    return;
-  }
+  if (error || !data?.ok) { console.error(error); alert("Create failed."); return; }
 
   alert("Board created/updated.");
   els.slug.value = p.slug;
@@ -343,8 +307,7 @@ els.cb.createBtn.addEventListener("click", async () => {
 /* ---------- Save payouts/mode/lock ---------- */
 els.payouts.saveBtn.addEventListener("click", async () => {
   if (!board) return alert("Load a board first.");
-  const token = els.token.value.trim();
-  if (!token) return alert("Enter admin password.");
+  const token = els.token.value.trim(); if (!token) return alert("Enter admin password.");
 
   const payouts = {
     q1: Number(els.payouts.q1.value || 0),
@@ -362,10 +325,7 @@ els.payouts.saveBtn.addEventListener("click", async () => {
     p_lock_at: lockISO,
     p_payout_mode: mode,
   });
-  if (error || !data?.ok) {
-    alert("Save failed.");
-    return;
-  }
+  if (error || !data?.ok) { alert("Save failed."); return; }
   alert("Settings saved.");
   await loadBoard(board.slug);
 });
@@ -373,8 +333,7 @@ els.payouts.saveBtn.addEventListener("click", async () => {
 /* ---------- Save Official Scores ---------- */
 els.scores.save.addEventListener("click", async () => {
   if (!board) return alert("Load a board first.");
-  const token = els.token.value.trim();
-  if (!token) return alert("Enter admin password.");
+  const token = els.token.value.trim(); if (!token) return alert("Enter admin password.");
 
   const scores = {
     q1:    { top: els.scores.q1_top.value,    side: els.scores.q1_side.value },
@@ -388,11 +347,7 @@ els.scores.save.addEventListener("click", async () => {
     p_token: token,
     p_scores: scores,
   });
-  if (error || !data?.ok) {
-    alert("Save failed (check password).");
-    return;
-  }
+  if (error || !data?.ok) { alert("Save failed (check password)."); return; }
   alert("Scores saved.");
   await loadBoard(board.slug);
 });
-
