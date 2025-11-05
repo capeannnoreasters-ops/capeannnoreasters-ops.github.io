@@ -29,6 +29,10 @@
     .section-title{font-weight:700;margin:6px 0 8px}
     hr{border:0;border-top:1px dashed var(--border);margin:12px 0}
     @media (max-width:1100px){ .grid{grid-template-columns:1fr} }
+    /* Auth card */
+    #authCard{max-width:420px;margin:40px auto}
+    #adminArea{display:none}
+    .danger{background:#dc2626;border-color:#dc2626}
   </style>
 </head>
 <body>
@@ -37,205 +41,232 @@
       <img src="./assets/logo-full.png" alt="Logo" onerror="this.style.display='none'"/>
       <div>
         <h1>Nor’easters — Admin</h1>
-        <div class="small">Manage boards, sales, payouts, randomization & winners</div>
+        <div class="small">Sign in to manage boards, sales, payouts, randomization & winners</div>
       </div>
       <div style="margin-left:auto">
         <a class="small" href="./">↩ Back to Boards</a>
       </div>
     </header>
 
-    <!-- Load / Auth -->
-    <div class="card">
+    <!-- Auth screen -->
+    <div id="authCard" class="card">
+      <div class="section-title">Admin Sign In</div>
       <div class="row">
         <div>
-          <label class="label" for="slug">Board Slug</label>
-          <input id="slug" placeholder="e.g., week3-storm"/>
+          <label class="label" for="authEmail">Email</label>
+          <input id="authEmail" type="email" placeholder="you@example.com"/>
         </div>
         <div>
-          <label class="label" for="adminToken">Admin Password</label>
-          <input id="adminToken" type="password" placeholder="enter admin password"/>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button id="loadBtn">Load</button>
-          <button id="setPwdBtn" title="Set/Change admin password">Set Admin Password</button>
+          <label class="label" for="authPassword">Password</label>
+          <input id="authPassword" type="password" placeholder="••••••••"/>
         </div>
       </div>
-      <div id="meta" class="small" style="margin-top:8px"></div>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button id="signInBtn">Sign In</button>
+        <button id="signOutBtn" class="ghost">Sign Out</button>
+      </div>
+      <div id="authMsg" class="small" style="margin-top:8px"></div>
     </div>
 
-    <div class="grid">
-      <!-- Column 1: Controls + Create Board -->
-      <div class="col">
-        <div class="card">
-          <div class="section-title">Board Controls</div>
-          <div class="row">
-            <button id="openBtn">Open Sales</button>
-            <button id="closeBtn">Close Sales</button>
+    <!-- Admin area -->
+    <div id="adminArea">
+      <div class="card">
+        <div class="row">
+          <div>
+            <label class="label" for="boardSelect">Select Board</label>
+            <select id="boardSelect"></select>
           </div>
-          <div class="row" style="margin-top:8px">
-            <button id="randomizeBtn" title="Requires 100/100 taken">Randomize Numbers (once)</button>
-            <button id="exportBtn">Export CSV</button>
+          <div style="display:flex;gap:8px">
+            <button id="loadBtn">Load</button>
+            <button id="deleteBoardBtn" class="danger" title="Deletes board & all reservations">Delete Board</button>
           </div>
-          <div id="stats" style="margin-top:10px"></div>
+        </div>
+        <div id="meta" class="small" style="margin-top:8px"></div>
+      </div>
+
+      <div class="grid">
+        <!-- Column 1 -->
+        <div class="col">
+          <div class="card">
+            <div class="section-title">Board Controls</div>
+            <div class="row">
+              <button id="openBtn">Open Sales</button>
+              <button id="closeBtn">Close Sales</button>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <button id="randomizeBtn" title="Requires 100/100 taken">Randomize Numbers (once)</button>
+              <button id="exportBtn">Export CSV</button>
+            </div>
+            <div id="stats" style="margin-top:10px"></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">Create / Update Board</div>
+            <div class="row">
+              <div>
+                <label class="label" for="cb_slug">Slug (unique)</label>
+                <input id="cb_slug" placeholder="e.g., week4-lions"/>
+              </div>
+              <div>
+                <label class="label" for="cb_title">Title</label>
+                <input id="cb_title" placeholder="Week 4 vs Lions"/>
+              </div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <div>
+                <label class="label" for="cb_top">Top team</label>
+                <input id="cb_top" placeholder="Nor’easters"/>
+              </div>
+              <div>
+                <label class="label" for="cb_side">Side team</label>
+                <input id="cb_side" placeholder="Opponents"/>
+              </div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <div>
+                <label class="label" for="cb_cost">$ per square</label>
+                <input id="cb_cost" type="number" min="0" step="1" placeholder="20"/>
+              </div>
+              <div>
+                <label class="label" for="cb_date">Game date</label>
+                <input id="cb_date" type="date"/>
+              </div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <div>
+                <label class="label" for="cb_venmo">Venmo handle</label>
+                <input id="cb_venmo" placeholder="@NoreastersFlagFB"/>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <button id="cb_create">Create/Update Board</button>
+              <div class="small" style="margin-top:6px">Creates or updates by slug.</div>
+            </div>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="section-title">Create Board</div>
-          <div class="row">
-            <div>
-              <label class="label" for="cb_slug">Slug (unique URL id)</label>
-              <input id="cb_slug" placeholder="e.g., week4-lions"/>
+        <!-- Column 2 -->
+        <div class="col">
+          <div class="card">
+            <div class="section-title">Payouts & Lock Time</div>
+            <div class="row3">
+              <div>
+                <label class="label" for="p_q1">Q1</label>
+                <input id="p_q1" type="number" min="0" step="1" placeholder="5"/>
+              </div>
+              <div>
+                <label class="label" for="p_ht">HT</label>
+                <input id="p_ht" type="number" min="0" step="1" placeholder="15"/>
+              </div>
+              <div>
+                <label class="label" for="p_q4">Q4</label>
+                <input id="p_q4" type="number" min="0" step="1" placeholder="5"/>
+              </div>
             </div>
-            <div>
-              <label class="label" for="cb_title">Title</label>
-              <input id="cb_title" placeholder="Week 4 vs Lions"/>
+            <div class="row" style="margin-top:8px">
+              <div>
+                <label class="label" for="p_final">Final</label>
+                <input id="p_final" type="number" min="0" step="1" placeholder="25"/>
+              </div>
+              <div>
+                <label class="label" for="lock_at">Lock / Randomize At</label>
+                <input id="lock_at" type="datetime-local"/>
+              </div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <div>
+                <label class="label" for="p_mode">Payout Mode</label>
+                <select id="p_mode">
+                  <option value="percent">Percent of Pot</option>
+                  <option value="fixed">Fixed $ Amounts</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <button id="saveSettingsBtn">Save Settings</button>
+              <div class="small" style="margin-top:6px">Payouts appear on the public rules.</div>
             </div>
           </div>
-          <div class="row" style="margin-top:8px">
-            <div>
-              <label class="label" for="cb_top">Top team</label>
-              <input id="cb_top" placeholder="Nor’easters"/>
+        </div>
+
+        <!-- Column 3 -->
+        <div class="col">
+          <div class="card">
+            <div class="section-title">Official Scores</div>
+            <div class="row">
+              <div>
+                <label class="label">Q1 (Top, Side)</label>
+                <div class="row">
+                  <input id="a_q1_top" type="number" placeholder="Top"/><input id="a_q1_side" type="number" placeholder="Side"/>
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="label" for="cb_side">Side team</label>
-              <input id="cb_side" placeholder="Opponents"/>
+            <div class="row" style="margin-top:8px">
+              <div>
+                <label class="label">HT (Top, Side)</label>
+                <div class="row">
+                  <input id="a_ht_top" type="number" placeholder="Top"/><input id="a_ht_side" type="number" placeholder="Side"/>
+                </div>
+              </div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <div>
+                <label class="label">Q4 (Top, Side)</label>
+                <div class="row">
+                  <input id="a_q4_top" type="number" placeholder="Top"/><input id="a_q4_side" type="number" placeholder="Side"/>
+                </div>
+              </div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <div>
+                <label class="label">Final (Top, Side)</label>
+                <div class="row">
+                  <input id="a_final_top" type="number" placeholder="Top"/><input id="a_final_side" type="number" placeholder="Side"/>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <button id="saveScoresAdmin">Save Scores</button>
             </div>
           </div>
-          <div class="row" style="margin-top:8px">
-            <div>
-              <label class="label" for="cb_cost">$ per square</label>
-              <input id="cb_cost" type="number" min="0" step="1" placeholder="20"/>
+
+          <div class="card" style="margin-top:12px">
+            <div class="section-title">Reservations</div>
+            <div class="small" style="margin-bottom:6px">Click “Mark Paid” to confirm payment.</div>
+            <div style="max-height:420px;overflow:auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>When</th>
+                    <th>Idx</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Paid At</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="resTableBody"></tbody>
+              </table>
             </div>
-            <div>
-              <label class="label" for="cb_date">Game date</label>
-              <input id="cb_date" type="date"/>
-            </div>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div>
-              <label class="label" for="cb_venmo">Venmo handle</label>
-              <input id="cb_venmo" placeholder="@NoreastersFlagFB"/>
-            </div>
-            <div>
-              <label class="label" for="cb_pwd">Admin password (for this board)</label>
-              <input id="cb_pwd" type="password" placeholder="set a password"/>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <button id="cb_create">Create/Update Board</button>
-            <div class="small" style="margin-top:6px">Creates the board (or updates if slug exists) and stores a hashed admin password.</div>
           </div>
         </div>
       </div>
 
-      <!-- Column 2: Payouts, Mode & Lock -->
-      <div class="col">
-        <div class="card">
-          <div class="section-title">Payouts & Lock Time</div>
-          <div class="row3">
-            <div>
-              <label class="label" for="p_q1">Q1</label>
-              <input id="p_q1" type="number" min="0" step="1" placeholder="5"/>
-            </div>
-            <div>
-              <label class="label" for="p_ht">HT</label>
-              <input id="p_ht" type="number" min="0" step="1" placeholder="15"/>
-            </div>
-            <div>
-              <label class="label" for="p_q4">Q4</label>
-              <input id="p_q4" type="number" min="0" step="1" placeholder="5"/>
-            </div>
+      <!-- Admins manager -->
+      <div class="card" style="margin-top:12px">
+        <div class="section-title">Admins</div>
+        <div class="row">
+          <div>
+            <label class="label" for="newAdminEmail">Add admin by email (must exist as a user)</label>
+            <input id="newAdminEmail" type="email" placeholder="newadmin@yourdomain.com"/>
           </div>
-          <div class="row" style="margin-top:8px">
-            <div>
-              <label class="label" for="p_final">Final</label>
-              <input id="p_final" type="number" min="0" step="1" placeholder="25"/>
-            </div>
-            <div>
-              <label class="label" for="lock_at">Lock / Randomize At</label>
-              <input id="lock_at" type="datetime-local"/>
-            </div>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div>
-              <label class="label" for="p_mode">Payout Mode</label>
-              <select id="p_mode">
-                <option value="percent">Percent of Pot</option>
-                <option value="fixed">Fixed $ Amounts</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <button id="saveSettingsBtn">Save Settings</button>
-            <div class="small" style="margin-top:6px">Payouts appear on the public rules. Numbers stay hidden until randomized.</div>
+          <div>
+            <button id="addAdminBtn">Add Admin</button>
           </div>
         </div>
+        <div class="small" style="margin-top:6px">Create the user in Supabase Auth first (email/password), then add here.</div>
       </div>
-
-      <!-- Column 3: Official Scores + Reservations -->
-      <div class="col">
-        <div class="card">
-          <div class="section-title">Official Scores</div>
-          <div class="row">
-            <div>
-              <label class="label">Q1 (Top, Side)</label>
-              <div class="row">
-                <input id="a_q1_top" type="number" placeholder="Top"/><input id="a_q1_side" type="number" placeholder="Side"/>
-              </div>
-            </div>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div>
-              <label class="label">HT (Top, Side)</label>
-              <div class="row">
-                <input id="a_ht_top" type="number" placeholder="Top"/><input id="a_ht_side" type="number" placeholder="Side"/>
-              </div>
-            </div>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div>
-              <label class="label">Q4 (Top, Side)</label>
-              <div class="row">
-                <input id="a_q4_top" type="number" placeholder="Top"/><input id="a_q4_side" type="number" placeholder="Side"/>
-              </div>
-            </div>
-          </div>
-          <div class="row" style="margin-top:8px">
-            <div>
-              <label class="label">Final (Top, Side)</label>
-              <div class="row">
-                <input id="a_final_top" type="number" placeholder="Top"/><input id="a_final_side" type="number" placeholder="Side"/>
-              </div>
-            </div>
-          </div>
-          <div style="margin-top:10px">
-            <button id="saveScoresAdmin">Save Scores</button>
-            <div class="small" style="margin-top:6px">Saves to the board and immediately updates winners on public page.</div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <div class="section-title">Reservations</div>
-          <div class="small" style="margin-bottom:6px">Click “Mark Paid” to confirm payment.</div>
-          <div style="max-height:420px;overflow:auto">
-            <table>
-              <thead>
-                <tr>
-                  <th>When</th>
-                  <th>Idx</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th>Paid At</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="resTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 
