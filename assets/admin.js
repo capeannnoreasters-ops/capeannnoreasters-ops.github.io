@@ -16,7 +16,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     detectSessionInUrl: false,
   },
 });
-window.sb = sb; // handy for quick console checks
+window.sb = sb; // for console debugging
 
 /* ---------- Element references (match admin.html) ---------- */
 const els = {
@@ -116,7 +116,7 @@ function renderPublicLink() {
   els.stats?.parentElement?.insertBefore(wrap, els.stats);
 }
 
-/* ---------- Auth UI (robust) ---------- */
+/* ---------- Auth UI ---------- */
 async function showAdmin() {
   els.authCard.style.display = "none";
   els.adminArea.style.display = "block";
@@ -139,7 +139,7 @@ async function refreshSessionUI() {
     console.log("[Admin] refreshSessionUI session:", !!session, session?.user?.email);
 
     if (session?.user) {
-      await showAdmin();
+      await showAdmin(); // flip UI first (even if boards fail to load)
       try { await loadBoardsList(); }
       catch (e) {
         console.error("[Admin] loadBoardsList failed:", e);
@@ -158,18 +158,25 @@ async function refreshSessionUI() {
 els.signInBtn?.addEventListener("click", async () => {
   console.log("[Admin] Sign In clicked");
   els.authMsg.textContent = "Signing in…";
+
   const email = els.authEmail.value.trim();
   const password = els.authPassword.value;
   if (!email || !password) { els.authMsg.textContent = "Enter email and password."; return; }
 
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) {
-    console.error("[Admin] signIn error:", error);
-    els.authMsg.textContent = error.message || "Sign-in failed.";
-    return;
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    console.log("[Admin] signIn result:", { hasSession: !!data?.session, user: data?.user?.email, error });
+    if (error) {
+      els.authMsg.textContent = error.message || "Sign-in failed.";
+      return;
+    }
+    els.authMsg.textContent = "Signed in.";
+  } catch (e) {
+    console.error("[Admin] signIn threw:", e);
+    els.authMsg.textContent = String(e?.message || e);
   }
-  els.authMsg.textContent = "Signed in.";
-  // auth state listener will flip the UI
+
+  await refreshSessionUI(); // force UI refresh immediately
 });
 
 els.signOutBtn?.addEventListener("click", async () => {
