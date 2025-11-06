@@ -2,14 +2,18 @@
 //  Nor’easters Admin Script
 // ==========================
 
+// --- Supabase Config ---
 const SUPABASE_URL = "https://jpzxvnqjsixvnwzjfxuh.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwenh2bnFqc2l4dm53empmeHVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODE5NTEsImV4cCI6MjA3Nzg1Nzk1MX0.hyDskGwIwNv9MNBHkuX_DrIpnUHBouK5hgPZKXGOEEk";
+// -----------------------
 
+// --- Supabase Client ---
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
 });
-window.sb = sb;
+window.sb = sb; // make available for console testing
+
 
 /* ---------- Elements ---------- */
 const els = {
