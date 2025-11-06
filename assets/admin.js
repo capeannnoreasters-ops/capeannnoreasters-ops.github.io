@@ -1,3 +1,23 @@
+// ---- CORS proxy shim (put this at the top, before createClient) ----
+const SUPABASE_URL  = "https://jpzxvnqjsixvnwzjfxuh.supabase.co";   // your real project
+const PROXY_URL     = "https://noreasters-cors.reilley-kevin.workers.dev"; // your Worker
+
+const _fetch = window.fetch.bind(window);
+window.fetch = (input, init) => {
+  try {
+    const url = new URL(typeof input === "string" ? input : input.url);
+    // If the request is going to Supabase, route it through the Worker (/sb prefix)
+    if (url.origin === SUPABASE_URL) {
+      const proxied = url.href.replace(SUPABASE_URL, PROXY_URL + "/sb");
+      const next = (typeof input === "string") ? proxied : new Request(proxied, input);
+      return _fetch(next, init);
+    }
+  } catch (_) {}
+  return _fetch(input, init);
+};
+// ---- end shim ----
+
+
 // ==========================
 //  Nor’easters Admin Script
 // ==========================
