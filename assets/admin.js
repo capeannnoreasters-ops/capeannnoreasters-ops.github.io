@@ -2,9 +2,9 @@
 //  Nor’easters Admin Script
 // ==========================
 
-// --- Proxied fetch for Supabase (client-scoped, most reliable) ---
-const SB_PROJECT_URL = "https://jpzxvnqjsixvnwzjfxuh.supabase.co";                 // your Supabase project
-const PROXY_URL      = "https://noreasters-cors.reilley-kevin.workers.dev";        // your Cloudflare Worker
+// --- Proxied fetch for Supabase (client-scoped) ---
+const SB_PROJECT_URL = "https://jpzxvnqjsixvnwzjfxuh.supabase.co"; // your Supabase project
+const PROXY_URL      = "https://noreasters-cors.reilley-kevin.workers.dev"; // your CF Worker
 
 const sbFetch = (input, init) => {
   try {
@@ -122,19 +122,24 @@ function showLogin(msg) {
 }
 
 async function refreshSessionUI() {
-  const { data, error } = await sb.auth.getSession();
-  if (error) {
-    console.error("[Admin] getSession error:", error);
-    showLogin(error.message || "Auth error.");
-    return;
-  }
-  const session = data?.session;
-  console.log("[Admin] refreshSessionUI session:", !!session, session?.user?.email);
-  if (session?.user) {
-    await showAdmin();
-    await loadBoardsList();
-  } else {
-    showLogin();
+  try {
+    const { data, error } = await sb.auth.getSession();
+    if (error) {
+      console.error("[Admin] getSession error:", error);
+      showLogin(error.message || "Auth error.");
+      return;
+    }
+    const session = data?.session;
+    console.log("[Admin] refreshSessionUI session:", !!session, session?.user?.email);
+    if (session?.user) {
+      await showAdmin();
+      await loadBoardsList();
+    } else {
+      showLogin();
+    }
+  } catch (e) {
+    console.error("[Admin] refreshSessionUI threw:", e);
+    showLogin(String(e?.message || e));
   }
 }
 
@@ -494,6 +499,99 @@ els.payouts.saveBtn?.addEventListener("click", async () => {
     ht: Number(els.payouts.ht.value || 0),
     q4: Number(els.payouts.q4.value || 0),
     final: Number(els.payouts.final.value || 0),
+  };
+  const lockISO = els.payouts.lockAt.value ? new Date(els.payouts.lockAt.value).toISOString() : null;
+  const mode = els.payouts.mode.value; // 'percent' or 'fixed'
 
+  // prefer RPC
+  let ok = false;
+  try {
+    const { data, error } = await sb.rpc("admin_update_board", {
+      p_board_slug: currentBoard.slug,
+      p_payouts: payouts,
+      p_lock_at: lockISO,
+      p_payout_mode: mode,
+    });
+    ok = !!(data?.ok) && !error;
+  } catch (_) {}
+  if (!ok) {
+    // fallback direct update
+    const { error } = await sb.from("boards")
+      .update({ payouts, lock_at: lockISO, payout_mode: mode })
+      .eq("id", currentBoard.id);
+    if (error) { alert("Save failed."); return; }
+  }
+  alert("Settings saved.");
+  await loadBoard(currentBoard.slug);
+});
+
+/* ---------- Save Official Scores ---------- */
+els.scores.save?.addEventListener("click", async () => {
+  if (!currentBoard) return alert("Load a board first.");
+
+  const scores = {
+    q1:    { top: els.scores.q1_top.value,    side: els.scores.q1_side.value },
+    ht:    { top: els.scores.ht_top.value,    side: els.scores.ht_side.value },
+    q4:    { top: els.scores.q4_top.value,    side: els.scores.q4_side.value },
+    final: { top: els.scores.final_top.value, side: els.scores.final_side.value },
+  };
+
+  // prefer RPC
+  let ok = false;
+  try {
+    const { data, error } = await sb.rpc("admin_set_scores", {
+      p_board_slug: currentBoard.slug,
+      p_scores: scores,
+    });
+    ok = !!(data?.ok) && !error;
+  } catch (_) {}
+  if (!ok) {
+    const { error } = await sb.from("boards").update({ scores }).eq("id", currentBoard.id);
+    if (error) { alert("Save failed."); return; }
+  }
+  alert("Scores saved.");
+  await loadBoard(currentBoard.slug);
+});
+
+/* ---------- Admins: add (optional; requires backend table) ---------- */
+els.addAdminBtn?.addEventListener("click", async () => {
+  const email = els.addAdminEmail?.value?.trim();
+  if (!email) return alert("Enter an email.");
+  const { error } = await sb.from("admins").upsert({ email });
+  if (error) { alert("Failed to add admin."); return; }
+  alert("Admin added.");
+  if (els.addAdminEmail) els.addAdminEmail.value = "";
+});
+
+/* ---------- Delete Board ---------- */
+els.deleteBoardBtn?.addEventListener("click", async () => {
+  if (!els.boardSelect?.value) return alert("Pick a board first.");
+  const slug = els.boardSelect.value;
+  if (!confirm(`Delete board "${slug}" and all its reservations? This cannot be undone.`)) return;
+
+  // prefer RPC if available
+  let ok = false;
+  try {
+    const { data, error } = await sb.rpc("admin_delete_board", { p_board_slug: slug });
+    ok = !!(data?.ok) && !error;
+  } catch (_) {}
+  if (!ok) {
+    // fallback: delete reservations then board
+    const { data: b, error: e1 } = await sb.from("boards").select("id").eq("slug", slug).maybeSingle();
+    if (e1 || !b) return alert("Board not found.");
+    await sb.from("reservations").delete().eq("board_id", b.id); // ignore error if none
+    const { error: e2 } = await sb.from("boards").delete().eq("id", b.id);
+    if (e2) return alert("Delete failed.");
+  }
+  alert("Board deleted.");
+  currentBoard = null;
+  els.meta.textContent = "";
+  await loadBoardsList();
+});
+
+/* ---------- Bootstrap ---------- */
+(async function init() {
+  console.log("[Admin] init");
   await refreshSessionUI();
 })();
+
