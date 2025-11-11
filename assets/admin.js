@@ -2,29 +2,30 @@
 //  Nor’easters Admin Script
 // ==========================
 
-// ---- CORS proxy shim (must be first) ----
-const SB_PROJECT_URL = "https://jpzxvnqjsixvnwzjfxuh.supabase.co";                // Supabase project URL
-const PROXY_URL      = "https://noreasters-cors.reilley-kevin.workers.dev";       // Your Cloudflare Worker
+// --- Proxied fetch for Supabase (client-scoped, most reliable) ---
+const SB_PROJECT_URL = "https://jpzxvnqjsixvnwzjfxuh.supabase.co";                 // your Supabase project
+const PROXY_URL      = "https://noreasters-cors.reilley-kevin.workers.dev";        // your Cloudflare Worker
 
-const __origFetch = window.fetch.bind(window);
-window.fetch = (input, init) => {
+const sbFetch = (input, init) => {
   try {
     const u = new URL(typeof input === "string" ? input : input.url);
     if (u.origin === SB_PROJECT_URL) {
       const proxied = u.href.replace(SB_PROJECT_URL, PROXY_URL + "/sb");
-      const next = (typeof input === "string") ? proxied : new Request(proxied, input);
-      return __origFetch(next, init);
+      const next = typeof input === "string" ? proxied : new Request(proxied, input);
+      return fetch(next, init);
     }
   } catch (_) {}
-  return __origFetch(input, init);
+  return fetch(input, init);
 };
-// ---- end shim ----
 
-// ---- Supabase Client ----
+// --- Supabase Client ---
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 const SUPABASE_URL = SB_PROJECT_URL;
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwenh2bnFqc2l4dm53empmeHVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODE5NTEsImV4cCI6MjA3Nzg1Nzk1MX0.hyDskGwIwNv9MNBHkuX_DrIpnUHBouK5hgPZKXGOEEk";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impwenh2bnFqc2l4dm53empmeHVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIyODE5NTEsImV4cCI6MjA3Nzg1Nzk1MX0.hyDskGwIwNv9MNBHkuX_DrIpnUHBouK5hgPZKXGOEEk";
+
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  global: { fetch: sbFetch }, // <- critical so all supabase calls use proxy
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
 });
 window.sb = sb; // handy for console testing
@@ -92,7 +93,7 @@ const els = {
     save:      document.getElementById("saveScoresAdmin"),
   },
 
-  // Admins manager
+  // Admins manager (optional)
   addAdminEmail: document.getElementById("newAdminEmail"),
   addAdminBtn: document.getElementById("addAdminBtn"),
 };
@@ -147,7 +148,7 @@ els.signInBtn?.addEventListener("click", async () => {
       els.authMsg.textContent = "Enter email and password.";
       return;
     }
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
       console.error(error);
       els.authMsg.textContent = error.message || "Sign in failed.";
@@ -189,12 +190,12 @@ async function loadBoardsList() {
       .order("game_date", { ascending: false, nullsFirst: true })
       .order("title", { ascending: true });
 
+    console.log("[Admin] loadBoardsList result:", { data, error });
+
     if (error) {
-      console.error("[Admin] loadBoardsList error:", error);
-      sel.innerHTML = '<option value="">Error loading boards</option>';
+      sel.innerHTML = `<option value="">Error: ${error.message || "failed"}</option>`;
       return;
     }
-
     if (!data || data.length === 0) {
       sel.innerHTML = '<option value="">— No boards yet —</option>';
       return;
@@ -205,7 +206,7 @@ async function loadBoardsList() {
       .join("");
   } catch (e) {
     console.error("[Admin] loadBoardsList threw:", e);
-    els.boardSelect.innerHTML = '<option value="">Error loading boards</option>';
+    sel.innerHTML = `<option value="">Error: ${String(e?.message || e)}</option>`;
   }
 }
 
@@ -215,12 +216,13 @@ async function loadBoard(slug) {
   currentBoard = data;
 
   // Meta header (include public link)
-  const publicURL = `${location.origin}${location.pathname.replace(/admin\.html$/, '')}public.html?board=${encodeURIComponent(currentBoard.slug)}`;
+  const basePath = location.pathname.replace(/admin\.html$/, "");
+  const publicURL = `${location.origin}${basePath}public.html?board=${encodeURIComponent(currentBoard.slug)}`;
   els.meta.innerHTML =
     `${currentBoard.title} • ${currentBoard.team_top} vs ${currentBoard.team_side} • ` +
     `$${currentBoard.cost_per_square}/sq • ${currentBoard.is_open ? "OPEN" : "CLOSED"}` +
     (currentBoard.randomized_at ? " • randomized " + fmtDate(currentBoard.randomized_at) : "") +
-    ` • <a href="${publicURL}" target="_blank" rel="noreferrer">View public page ↗</a>`;
+    ` • <a href="${publicURL}" target="_blank" rel="noreferrer">Public page ↗</a>`;
 
   // Fill payouts + lock + mode
   els.payouts.q1.value    = currentBoard.payouts?.q1 ?? (currentBoard.payout_mode === "fixed" ? 0 : 5);
@@ -259,11 +261,11 @@ els.loadBtn?.addEventListener("click", async () => {
 /* ---------- Stats & reservations ---------- */
 async function refreshStats() {
   if (!currentBoard) return;
-  // board_stats is a view; if missing, just compute minimal stats
+  // board_stats is a view; if missing, compute fallback
   try {
     const { data, error } = await sb.from("board_stats").select("*").eq("slug", currentBoard.slug).maybeSingle();
     if (error || !data) {
-      // Fallback: count reservations table
+      // Fallback: count reservations
       const { count: sold } = await sb.from("reservations").select("*", { count: "exact", head: true }).eq("board_id", currentBoard.id);
       const { count: paid } = await sb.from("reservations").select("*", { count: "exact", head: true }).eq("board_id", currentBoard.id).eq("status", "paid");
       const pending = (sold || 0) - (paid || 0);
@@ -351,7 +353,6 @@ async function refreshReservations() {
 // Open / Close
 els.openBtn?.addEventListener("click", async () => {
   if (!currentBoard) return alert("Load a board first.");
-  // RPC preferred
   let ok = false;
   try {
     const { data, error } = await sb.rpc("admin_set_open", {
@@ -493,99 +494,6 @@ els.payouts.saveBtn?.addEventListener("click", async () => {
     ht: Number(els.payouts.ht.value || 0),
     q4: Number(els.payouts.q4.value || 0),
     final: Number(els.payouts.final.value || 0),
-  };
-  const lockISO = els.payouts.lockAt.value ? new Date(els.payouts.lockAt.value).toISOString() : null;
-  const mode = els.payouts.mode.value; // 'percent' or 'fixed'
 
-  // prefer RPC
-  let ok = false;
-  try {
-    const { data, error } = await sb.rpc("admin_update_board", {
-      p_board_slug: currentBoard.slug,
-      p_payouts: payouts,
-      p_lock_at: lockISO,
-      p_payout_mode: mode,
-    });
-    ok = !!(data?.ok) && !error;
-  } catch (_) {}
-  if (!ok) {
-    // fallback direct update
-    const { error } = await sb.from("boards")
-      .update({ payouts, lock_at: lockISO, payout_mode: mode })
-      .eq("id", currentBoard.id);
-    if (error) { alert("Save failed."); return; }
-  }
-  alert("Settings saved.");
-  await loadBoard(currentBoard.slug);
-});
-
-/* ---------- Save Official Scores ---------- */
-els.scores.save?.addEventListener("click", async () => {
-  if (!currentBoard) return alert("Load a board first.");
-
-  const scores = {
-    q1:    { top: els.scores.q1_top.value,    side: els.scores.q1_side.value },
-    ht:    { top: els.scores.ht_top.value,    side: els.scores.ht_side.value },
-    q4:    { top: els.scores.q4_top.value,    side: els.scores.q4_side.value },
-    final: { top: els.scores.final_top.value, side: els.scores.final_side.value },
-  };
-
-  // prefer RPC
-  let ok = false;
-  try {
-    const { data, error } = await sb.rpc("admin_set_scores", {
-      p_board_slug: currentBoard.slug,
-      p_scores: scores,
-    });
-    ok = !!(data?.ok) && !error;
-  } catch (_) {}
-  if (!ok) {
-    const { error } = await sb.from("boards").update({ scores }).eq("id", currentBoard.id);
-    if (error) { alert("Save failed."); return; }
-  }
-  alert("Scores saved.");
-  await loadBoard(currentBoard.slug);
-});
-
-/* ---------- Admins: add (optional; requires matching backend) ---------- */
-els.addAdminBtn?.addEventListener("click", async () => {
-  const email = els.addAdminEmail.value.trim();
-  if (!email) return alert("Enter an email.");
-  // If you created a table `admins` (email text unique), upsert it:
-  const { error } = await sb.from("admins").upsert({ email });
-  if (error) { alert("Failed to add admin."); return; }
-  alert("Admin added.");
-  els.addAdminEmail.value = "";
-});
-
-/* ---------- Delete Board ---------- */
-els.deleteBoardBtn?.addEventListener("click", async () => {
-  if (!els.boardSelect?.value) return alert("Pick a board first.");
-  const slug = els.boardSelect.value;
-  if (!confirm(`Delete board "${slug}" and all its reservations? This cannot be undone.`)) return;
-
-  // prefer RPC if available
-  let ok = false;
-  try {
-    const { data, error } = await sb.rpc("admin_delete_board", { p_board_slug: slug });
-    ok = !!(data?.ok) && !error;
-  } catch (_) {}
-  if (!ok) {
-    // fallback: delete reservations then board
-    const { data: b, error: e1 } = await sb.from("boards").select("id").eq("slug", slug).maybeSingle();
-    if (e1 || !b) return alert("Board not found.");
-    await sb.from("reservations").delete().eq("board_id", b.id); // ignore error if none
-    const { error: e2 } = await sb.from("boards").delete().eq("id", b.id);
-    if (e2) return alert("Delete failed.");
-  }
-  alert("Board deleted.");
-  currentBoard = null;
-  els.meta.textContent = "";
-  await loadBoardsList();
-});
-
-/* ---------- Bootstrap ---------- */
-(async function init() {
-  console.log("[Admin] init");
   await refreshSessionUI();
 })();
